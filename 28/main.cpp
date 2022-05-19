@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     GLUTBackendInit(argc, argv);
     Magick::InitializeMagick(nullptr); // <--- added this line
 
-    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Tutorial 28")) {
+    if (!GLUTBackendCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, 32, false, "Chelyshkina Tutorial 28")) {
         return 1;
     }
 
