@@ -60,7 +60,9 @@ void BillboardList::CreatePositionBuffer()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Positions), &Positions[0], GL_STATIC_DRAW);
 }
 
-
+/*функция разрешает использование методов billboard, 
+устанавливает требуемые переменные состояния OpenGL 
+и рисует точки, которые будут переделаны в прямоугольник в GS*/
 void BillboardList::Render(const Matrix4f& VP, const Vector3f& CameraPos)
 {
     m_technique.Enable();

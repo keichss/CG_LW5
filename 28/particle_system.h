@@ -1,20 +1,4 @@
-/*
 
-	Copyright 2011 Etay Meiri
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #ifndef PARTICLE_SYSTEM_H
 #define	PARTICLE_SYSTEM_H
@@ -25,7 +9,11 @@
 #include "random_texture.h"
 #include "billboard_technique.h"
 #include "texture.h"
-//Класс системы частиц
+/*Класс системы частиц инкапсулирует всю механику взаимодействия буферов transform feedback. 
+Один экземпляр этого класса создается приложением и инициализирует в мировых координатах пусковую частицу. 
+В главном цикле рендера будет вызываться функция ParticleSystem::Render() с тремя входящими параметрами: 
+время, прошедшшее с последнего вызова, в милисикундах, произвдение матриц обзора и проекции и позиция камеры 
+в мировом пространстве.*/
 class ParticleSystem
 {
 public:

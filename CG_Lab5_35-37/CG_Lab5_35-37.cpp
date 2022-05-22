@@ -126,7 +126,7 @@ public:
     }
 
 
-    virtual void RenderSceneCB()
+    virtual void RenderSceneCB() //вызывает геометрический проход перед проходом света
     {
         CalcFPS();
 
@@ -138,9 +138,9 @@ public:
 
         DSGeometryPass();
 
-        // We need stencil to be enabled in the stencil pass to get the stencil buffer
-        // updated and we also need it in the light pass because we render the light
-        // only if the stencil passes.
+        // Для того, что бы обновился буфер трафарета нужно его активировать,
+        // так же он потребуется и в проходе света, так как свет рендерится
+        // только при успешном проходе трафарета.
         glEnable(GL_STENCIL_TEST);
 
         for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_pointLight); i++) {
@@ -148,8 +148,8 @@ public:
             DSPointLightPass(i);
         }
 
-        // The directional light does not need a stencil test because its volume
-        // is unlimited and the final pass simply copies the texture.
+        // Направленному свету не требуется трафарет
+        // так как его действие не ограничено расстоянием.
         glDisable(GL_STENCIL_TEST);
 
         DSDirectionalLightPass();
@@ -160,7 +160,9 @@ public:
 
         glutSwapBuffers();
     }
-
+    /*начинаем геометрический проход с разрешения использовать соответствующую технологию 
+    и задаем объект GBuffer на запись. После этого очищаем G буффер. 
+    настраиваем преобразования и рендерим меш*/
 
     void DSGeometryPass()
     {
@@ -168,7 +170,7 @@ public:
 
         m_gbuffer.BindForGeomPass();
 
-        // Only the geometry pass updates the depth buffer
+        // Только геометрический проход обновляет тест глубины
         glDepthMask(GL_TRUE);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -187,16 +189,16 @@ public:
             m_box.Render();
         }
 
-        // When we get here the depth buffer is already populated and the stencil pass
-        // depends on it, but it does not write to it.
+        // К этому моменту буфер глубины уже заполнен и, хоть проход трафарета
+        // и основывается на нем, запись не потребуется.
         glDepthMask(GL_FALSE);
     }
 
-    void DSStencilPass(unsigned int PointLightIndex)
+    void DSStencilPass(unsigned int PointLightIndex) // проход трафарета
     {
         m_nullTech.Enable();
 
-        // Disable color/depth write and enable stencil
+        // Отключаем запись цвета / глубины и включаем трафарет
         m_gbuffer.BindForStencilPass();
         glEnable(GL_DEPTH_TEST);
 
@@ -204,8 +206,8 @@ public:
 
         glClear(GL_STENCIL_BUFFER_BIT);
 
-        // We need the stencil test to be enabled but we want it
-        // to succeed always. Only the depth test matters.
+        // Нам нужен тест трафарета, но мы хотим, что бы он всегда
+        // успешно проходил. Важен только тест глубины.
         glStencilFunc(GL_ALWAYS, 0, 0);
 
         glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
@@ -222,7 +224,10 @@ public:
         m_bsphere.Render();
     }
 
-
+    /*Для точечного света мы просто рендерим сферу для каждого источника. 
+    Центр сферы установлен в позиции источника света, а функция CalcPointLightBSphere() 
+    вычисляет радиус сферы согласно параметрам источника света.
+    проход света начинается с настройки G буфера*/
     void DSPointLightPass(unsigned int PointLightIndex)
     {
         m_gbuffer.BindForLightPass();
@@ -254,7 +259,7 @@ public:
         glDisable(GL_BLEND);
     }
 
-
+    //обработка направленного света
     void DSDirectionalLightPass()
     {
         m_gbuffer.BindForLightPass();
@@ -273,7 +278,7 @@ public:
     }
 
 
-    void DSFinalPass()
+    void DSFinalPass() // блиттим (blit) из буфера цвета в G буфере на экран
     {
         m_gbuffer.BindForFinalPass();
         glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
@@ -315,7 +320,7 @@ public:
 
 private:
 
-    // The calculation solves a quadratic equation (see http://en.wikipedia.org/wiki/Quadratic_equation)
+    // вычисляет размер сферы для указанного источника света
     float CalcPointLightBSphere(const PointLight& Light)
     {
         float MaxChannel = fmax(fmax(Light.Color.x, Light.Color.y), Light.Color.z);

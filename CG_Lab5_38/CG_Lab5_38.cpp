@@ -121,7 +121,7 @@ public:
         m_pEffect->Enable();
 
         vector<Matrix4f> Transforms;
-
+        // возвращает прошедшее время в секундах от начала запуска приложения
         float RunningTime = (float)((double)GetCurrentTime() - (double)m_startTime) / 1000.0f;
 
         m_mesh.BoneTransform(RunningTime, Transforms);

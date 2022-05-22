@@ -1,20 +1,4 @@
-/*
 
-	Copyright 2011 Etay Meiri
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include "engine_common.h"
 #include "util.h"
@@ -28,7 +12,7 @@
 #define PARTICLE_TYPE_SHELL 1.0f
 #define PARTICLE_TYPE_SECONDARY_SHELL 2.0f
 
-struct Particle
+struct Particle //структура каждой частицы
 {
     float Type;    
     Vector3f Pos;
@@ -63,7 +47,7 @@ ParticleSystem::~ParticleSystem()
     }
 }
 
-
+//инициализация системы частиц
 bool ParticleSystem::InitParticleSystem(const Vector3f& Pos)
 {   
     Particle Particles[MAX_PARTICLES];
@@ -120,7 +104,7 @@ bool ParticleSystem::InitParticleSystem(const Vector3f& Pos)
     return GLCheckError();
 }
 
-
+//главная функция рендера класса ParticleSystem
 void ParticleSystem::Render(int DeltaTimeMillis, const Matrix4f& VP, const Vector3f& CameraPos)
 {
     m_time += DeltaTimeMillis;
@@ -133,7 +117,7 @@ void ParticleSystem::Render(int DeltaTimeMillis, const Matrix4f& VP, const Vecto
     m_currTFB = (m_currTFB + 1) & 0x1;
 }
 
-
+//обновление частиц
 void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
 {
     m_updateTechnique.Enable();
@@ -142,11 +126,11 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
    
     m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
     
-    glEnable(GL_RASTERIZER_DISCARD);
+    glEnable(GL_RASTERIZER_DISCARD);//указывает конвейеру убирать все премитивы, прежде чем они попадут в растеризатор
     
     glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currVB]);    
     glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[m_currTFB]);
-
+//устанавливают вершинные атрибуты частиц в вершинный буфер
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -158,6 +142,8 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)28);          // lifetime
     
     glBeginTransformFeedback(GL_POINTS);
+    /*Все вызовы отрисовки после него, и до вызова glEndTransformFeedback(), 
+    перенаправляют их выход в буфер transform feedback согласно текущему привязаному объекту transform feedback*/
 
     if (m_isFirst) {
         glDrawArrays(GL_POINTS, 0, 1);

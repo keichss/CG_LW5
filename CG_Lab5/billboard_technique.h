@@ -5,7 +5,9 @@
 
 #include "technique.h"
 #include "math_3d.h"
-
+/*интерфейс дл€ метода billboard. ќн требует только 3 параметра дл€ работы: 
+комбинаци€ матрицы проекции, позици€ камеры в мировом пространстве и номер модул€ текстуры, 
+к которому будет прив€зана текстура billboard.*/
 class BillboardTechnique : public Technique 
 {
 public:

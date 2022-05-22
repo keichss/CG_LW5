@@ -29,7 +29,7 @@ void Mesh::Clear()
     }
        
     if (m_VAO != 0) {
-        glDeleteVertexArrays(1, &m_VAO);
+        glDeleteVertexArrays(1, &m_VAO); //удаляет VAO
         m_VAO = 0;
     }
 }
@@ -37,14 +37,14 @@ void Mesh::Clear()
 
 bool Mesh::LoadMesh(const string& Filename)
 {
-    // Release the previously loaded mesh (if it exists)
+    // Удаляем предыдущую загруженную модель (если есть)
     Clear();
  
-    // Create the VAO
+    // Создание VAO
     glGenVertexArrays(1, &m_VAO);   
     glBindVertexArray(m_VAO);
     
-    // Create the buffers for the vertices attributes
+    // Создание буферов для атрибутов вершин
     glGenBuffers(ARRAY_SIZE_IN_ELEMENTS(m_Buffers), m_Buffers);
 
     bool Ret = false;
@@ -59,7 +59,7 @@ bool Mesh::LoadMesh(const string& Filename)
         printf("Error parsing '%s': '%s'\n", Filename.c_str(), Importer.GetErrorString());
     }
 
-    // Make sure the VAO is not changed from the outside
+    // Удостоверимся, что VAO не изменится из внешнего кода
     glBindVertexArray(0);	
 
     return Ret;
@@ -69,7 +69,7 @@ bool Mesh::InitFromScene(const aiScene* pScene, const string& Filename)
 {  
     m_Entries.resize(pScene->mNumMeshes);
     m_Textures.resize(pScene->mNumMaterials);
-
+    // Подготавливаем вектора для вершинных атрибутов и индексов
     vector<Vector3f> Positions;
     vector<Vector3f> Normals;
     vector<Vector2f> TexCoords;
@@ -78,7 +78,7 @@ bool Mesh::InitFromScene(const aiScene* pScene, const string& Filename)
     unsigned int NumVertices = 0;
     unsigned int NumIndices = 0;
     
-    // Count the number of vertices and indices
+    // Подсчитываем количество вершин и индексов
     for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
         m_Entries[i].MaterialIndex = pScene->mMeshes[i]->mMaterialIndex;        
         m_Entries[i].NumIndices = pScene->mMeshes[i]->mNumFaces * 3;
@@ -89,13 +89,13 @@ bool Mesh::InitFromScene(const aiScene* pScene, const string& Filename)
         NumIndices  += m_Entries[i].NumIndices;
     }
     
-    // Reserve space in the vectors for the vertex attributes and indices
+    // Резервируем пространство в векторах для атрибутов вершин и индексов
     Positions.reserve(NumVertices);
     Normals.reserve(NumVertices);
     TexCoords.reserve(NumVertices);
     Indices.reserve(NumIndices);
 
-    // Initialize the meshes in the scene one by one
+    // Инициализируем меши в сцене один за другим
     for (unsigned int i = 0 ; i < m_Entries.size() ; i++) {
         const aiMesh* paiMesh = pScene->mMeshes[i];
         InitMesh(paiMesh, Positions, Normals, TexCoords, Indices);
@@ -105,7 +105,7 @@ bool Mesh::InitFromScene(const aiScene* pScene, const string& Filename)
         return false;
     }
 
-    // Generate and populate the buffers with vertex attributes and the indices
+    // Создаем и заполняем буферы с вершинными атрибутами и индексами
   	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Positions[0]) * Positions.size(), &Positions[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
@@ -135,7 +135,7 @@ void Mesh::InitMesh(const aiMesh* paiMesh,
 {    
     const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
-    // Populate the vertex attribute vectors
+    // Заполняем векторы вершинных атрибутов
     for (unsigned int i = 0 ; i < paiMesh->mNumVertices ; i++) {
         const aiVector3D* pPos      = &(paiMesh->mVertices[i]);
         const aiVector3D* pNormal   = &(paiMesh->mNormals[i]);
@@ -146,7 +146,7 @@ void Mesh::InitMesh(const aiMesh* paiMesh,
         TexCoords.push_back(Vector2f(pTexCoord->x, pTexCoord->y));
     }
 
-    // Populate the index buffer
+    // Заполняем буфер индексов
     for (unsigned int i = 0 ; i < paiMesh->mNumFaces ; i++) {
         const aiFace& Face = paiMesh->mFaces[i];
         assert(Face.mNumIndices == 3);

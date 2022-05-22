@@ -35,11 +35,11 @@ GBuffer::~GBuffer()
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 {
-    // Create the FBO
+	// Создаем FBO
     glGenFramebuffers(1, &m_fbo);    
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    // Create the gbuffer textures
+	// Создаем текстуры gbuffer
     glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
 
 	glGenTextures(1, &m_depthTexture);
@@ -54,7 +54,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textures[i], 0);
     }
 
-	// depth
+	// глубина
 	glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
@@ -63,7 +63,8 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 	glBindTexture(GL_TEXTURE_2D, m_finalTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_finalTexture, 0);	
-
+	/*При инициализации G буфера нам требуется выделить еще 1 текстуру для итоговой текстуры. 
+	Последняя привязывается под номером 4*/
     GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     if (Status != GL_FRAMEBUFFER_COMPLETE) {
@@ -71,13 +72,13 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
         return false;
     }
 
-	// restore default FBO
+	// возвращаем стандартный FBO
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     return true;
 }
 
-
+// Перед началом кажого кадра мы должны очистить итоговую текстуру, которая привязана под номером 4.
 void GBuffer::StartFrame()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
@@ -100,12 +101,12 @@ void GBuffer::BindForGeomPass()
 
 void GBuffer::BindForStencilPass()
 {
-    // must disable the draw buffers 
+	// должны отключить буфер цвета
 	glDrawBuffer(GL_NONE);
 }
 
 
-
+// проход света: назначаем целью итоговый буфер и привязываем аттрибуты буфера как источник.
 void GBuffer::BindForLightPass()
 {
 	glDrawBuffer(GL_COLOR_ATTACHMENT4);
@@ -116,7 +117,8 @@ void GBuffer::BindForLightPass()
 	}
 }
 
-
+/*настраиваем блиттинг, который осуществляется в главном коде. 
+FBO по-умолчанию ставим целью, а FBO G буфера - источником.*/
 void GBuffer::BindForFinalPass()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

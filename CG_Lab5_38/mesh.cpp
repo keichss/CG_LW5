@@ -1,20 +1,4 @@
-/*
 
-	Copyright 2011 Etay Meiri
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include <assert.h>
 
@@ -25,7 +9,7 @@
 #define NORMAL_LOCATION      2
 #define BONE_ID_LOCATION     3
 #define BONE_WEIGHT_LOCATION 4
-
+//функция находит свободные слоты в структуре VertexBoneData и размещает внутри id и вес кости
 void Mesh::VertexBoneData::AddBoneData(uint BoneID, float Weight)
 {
     for (uint i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(IDs) ; i++) {
@@ -74,14 +58,14 @@ void Mesh::Clear()
 
 bool Mesh::LoadMesh(const string& Filename)
 {
-    // Release the previously loaded mesh (if it exists)
+    // Очищаем данные прошлого меша (если был загружен)
     Clear();
  
-    // Create the VAO
+    // Создаем VAO
     glGenVertexArrays(1, &m_VAO);   
     glBindVertexArray(m_VAO);
     
-    // Create the buffers for the vertices attributes
+    // Создаем буферы для аттрибутов вершин
     glGenBuffers(ARRAY_SIZE_IN_ELEMENTS(m_Buffers), m_Buffers);
 
     bool Ret = false;    
@@ -97,7 +81,7 @@ bool Mesh::LoadMesh(const string& Filename)
         printf("Error parsing '%s': '%s'\n", Filename.c_str(), m_Importer.GetErrorString());
     }
 
-    // Make sure the VAO is not changed from the outside
+    // Убедимся, что VAO не изменится из вне
     glBindVertexArray(0);	
 
     return Ret;
@@ -209,7 +193,7 @@ void Mesh::InitMesh(uint MeshIndex,
     }
 }
 
-
+// загружает информацию о кости для одного объекта aiMesh. Она вызывается из Mesh::InitMesh()
 void Mesh::LoadBones(uint MeshIndex, const aiMesh* pMesh, vector<VertexBoneData>& Bones)
 {
     for (uint i = 0 ; i < pMesh->mNumBones ; i++) {                
@@ -331,7 +315,7 @@ uint Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
     return 0;
 }
 
-
+// метод находит ключевое вращение непосредственно перед временем анимации
 uint Mesh::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
     assert(pNodeAnim->mNumRotationKeys > 0);
@@ -383,10 +367,10 @@ void Mesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const 
     Out = Start + Factor * Delta;
 }
 
-
+// метод интерполирует кватернион вращения указанного канала согласно времени анимации
 void Mesh::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
 {
-	// we need at least two values to interpolate...
+    // для интерполирования требуется не менее 2 значений...
     if (pNodeAnim->mNumRotationKeys == 1) {
         Out = pNodeAnim->mRotationKeys[0].mValue;
         return;
@@ -424,7 +408,8 @@ void Mesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const a
     Out = Start + Factor * Delta;
 }
 
-
+/*функция обходит листы дерева и генерирует итоговое преобразование 
+для каждого листа / кости согласно указанному времени анимации*/
 void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const Matrix4f& ParentTransform)
 {    
     string NodeName(pNode->mName.data);
@@ -436,24 +421,24 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const Mat
     const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
     
     if (pNodeAnim) {
-        // Interpolate scaling and generate scaling transformation matrix
+        // Интерполируем масштабирование и генерируем матрицу преобразования масштаба
         aiVector3D Scaling;
         CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
         Matrix4f ScalingM;
         ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
         
-        // Interpolate rotation and generate rotation transformation matrix
+        // Интерполируем вращение и генерируем матрицу вращения
         aiQuaternion RotationQ;
         CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim);        
         Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
 
-        // Interpolate translation and generate translation transformation matrix
+        //  Интерполируем смещение и генерируем матрицу смещения
         aiVector3D Translation;
         CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
         Matrix4f TranslationM;
         TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
         
-        // Combine the above transformations
+        // Объединяем преобразования
         NodeTransformation = TranslationM * RotationM * ScalingM;
     }
        
@@ -469,7 +454,7 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const Mat
     }
 }
 
-
+//Загрузка данных костей на уровне вершин происходит только 1 раз при загрузке меша
 void Mesh::BoneTransform(float TimeInSeconds, vector<Matrix4f>& Transforms)
 {
     Matrix4f Identity;

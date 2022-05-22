@@ -140,7 +140,7 @@ public:
         RenderFPS();
 
         glutSwapBuffers();
-    }
+    } //показывает как вызвать обновленную функцию Mesh::Render(). Мы создаем объект конвейера и заполняем его
 
     virtual void IdleCB()
     {
